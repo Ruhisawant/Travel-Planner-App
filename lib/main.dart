@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:table_calendar/table_calendar.dart';
 
 void main() {
   runApp(const MyApp());
@@ -23,9 +24,15 @@ class Plan {
   final String id = UniqueKey().toString();
   String name;
   bool isCompleted;
+  DateTime? date;
   String priority;
 
-  Plan({required this.name, this.isCompleted = false, required this.priority});
+  Plan({
+    required this.name, 
+    this.isCompleted = false, 
+    this.date,
+    required this.priority
+  });
 }
 
 class PlanManagerScreen extends StatefulWidget {
@@ -38,11 +45,25 @@ class PlanManagerScreen extends StatefulWidget {
 }
 
 class _PlanManagerScreenState extends State<PlanManagerScreen> {
+  final List<Plan> _calendarPlans = [];
+  final Map<DateTime, List<Plan>> _scheduledPlans = {};  // Stores plans for specific dates
+
   final List<Plan> _plans = [
     Plan(name: 'Plan 1', priority: 'High'),
     Plan(name: 'Plan 2', priority: 'Medium'),
     Plan(name: 'Plan 3', priority: 'Low'),
   ];
+
+  void _addCalendarPlan(String name, DateTime date, String priority) {
+    setState(() {
+      final newPlan = Plan(name: name, date: date, priority: priority);
+      _plans.add(newPlan);
+      if (_scheduledPlans[date] == null) {
+        _scheduledPlans[date] = [];
+      }
+      _scheduledPlans[date]?.add(newPlan);
+    });
+  }
 
   void _addPlan(String name, String priority) {
     setState(() {
@@ -145,6 +166,66 @@ class _PlanManagerScreenState extends State<PlanManagerScreen> {
       ),
       body: Column(
         children: [
+          TableCalendar(
+            focusedDay: DateTime.now(),
+            firstDay: DateTime(2020),
+            lastDay: DateTime(2030),
+            selectedDayPredicate: (day) {
+              return isSameDay(day, DateTime.now());
+            },
+            onDaySelected: (selectedDay, focusedDay) {
+              showDialog<String>(
+                context: context,
+                builder: (BuildContext context) {
+                  TextEditingController planController = TextEditingController();
+                  String selectedPriority = 'Medium';
+                  return AlertDialog(
+                    title: const Text('Create Plan'),
+                    content: Column(
+                      children: [
+                        TextField(
+                          controller: planController,
+                          decoration: const InputDecoration(hintText: 'Enter Plan Name'),
+                        ),
+                        DropdownButton<String>(
+                          value: selectedPriority,
+                          items: <String>['Low', 'Medium', 'High']
+                              .map<DropdownMenuItem<String>>((String value) {
+                            return DropdownMenuItem<String>(
+                              value: value,
+                              child: Text(value),
+                            );
+                          }).toList(),
+                          onChanged: (String? newValue) {
+                            setState(() {
+                              selectedPriority = newValue!;
+                            });
+                          },
+                        ),
+                      ],
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text('Cancel'),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          if (planController.text.isNotEmpty) {
+                            _addCalendarPlan(planController.text, selectedDay, selectedPriority);
+                          }
+                          Navigator.pop(context);
+                        },
+                        child: const Text('Create'),
+                      ),
+                    ],
+                  );
+                },
+              );
+            },
+          ),
+          SizedBox(height: 50),
+
           Expanded(
             child: ListView.builder(
               itemCount: _plans.length,
@@ -170,6 +251,7 @@ class _PlanManagerScreenState extends State<PlanManagerScreen> {
               },
             ),
           ),
+
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: ElevatedButton(
