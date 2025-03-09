@@ -10,11 +10,11 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Travel Planner',
+      title: 'Plan Manager',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: const PlanManagerScreen(title: 'Home'),
+      home: const PlanManagerScreen(title: 'Plan Manager'),
     );
   }
 }
@@ -32,14 +32,15 @@ class PlanManagerScreen extends StatefulWidget {
   final String title;
 
   @override
-  State<PlanManagerScreen> createState() => MyHomePageState();
+  State<PlanManagerScreen> createState() => _PlanManagerScreenState();
 }
 
-class MyHomePageState extends State<PlanManagerScreen> {
+class _PlanManagerScreenState extends State<PlanManagerScreen> {
+  // List of plans with name and completion status
   final List<Plan> _plans = [
-    Plan(name: 'plan 1'),
-    Plan(name: 'plan 2'),
-    Plan(name: 'plan 3'),
+    Plan(name: 'Plan 1'),
+    Plan(name: 'Plan 2'),
+    Plan(name: 'Plan 3'),
   ];
 
   // Method to add a new plan
@@ -86,23 +87,27 @@ class MyHomePageState extends State<PlanManagerScreen> {
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
+                // Checkbox to toggle completion status
                 IconButton(
                   icon: Icon(plan.isCompleted ? Icons.check_box : Icons.check_box_outline_blank),
                   onPressed: () => _togglePlanCompletion(index),
                 ),
+                // Button to update the plan's name
                 IconButton(
                   icon: const Icon(Icons.edit),
                   onPressed: () {
-                    // Example: update plan name
                     _updatePlan(index, 'Updated Plan Name');
                   },
                 ),
+                // Button to delete the plan
                 IconButton(
                   icon: const Icon(Icons.delete),
                   onPressed: () => _removePlan(index),
                 ),
               ],
             ),
+            // Style for completed plan
+            tileColor: plan.isCompleted ? Colors.green[100] : null,
           );
         },
       ),
