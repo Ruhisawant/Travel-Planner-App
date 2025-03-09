@@ -211,12 +211,14 @@ class _PlanManagerScreenState extends State<PlanManagerScreen> {
               return isSameDay(day, DateTime.now());
             },
             onDaySelected: (selectedDay, focusedDay) {
+              final DateTime dateWithoutTime = DateTime(selectedDay.year, selectedDay.month, selectedDay.day);
               showDialog<String>(
                 context: context,
                 builder: (BuildContext context) {
                   TextEditingController planController = TextEditingController();
                   String selectedPriority = 'Medium';
                   String selectedDescription = '';
+
                   return AlertDialog(
                     title: const Text('Create Plan'),
                     content: Column(
@@ -254,7 +256,7 @@ class _PlanManagerScreenState extends State<PlanManagerScreen> {
                       TextButton(
                         onPressed: () {
                           if (planController.text.isNotEmpty) {
-                            _addCalendarPlan(planController.text, selectedDay, selectedPriority, selectedDescription);
+                            _addCalendarPlan(planController.text, dateWithoutTime, selectedPriority, selectedDescription);
                           }
                           Navigator.pop(context);
                         },
@@ -266,8 +268,8 @@ class _PlanManagerScreenState extends State<PlanManagerScreen> {
               );
             },
           ),
+
           SizedBox(height: 50),
-          
           Expanded(
             child: ListView.builder(
               itemCount: _plans.length,
