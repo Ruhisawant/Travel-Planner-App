@@ -23,8 +23,9 @@ class Plan {
   final String id = UniqueKey().toString();
   String name;
   bool isCompleted;
+  String priority;
 
-  Plan({required this.name, this.isCompleted = false});
+  Plan({required this.name, this.isCompleted = false, required this.priority});
 }
 
 class PlanManagerScreen extends StatefulWidget {
@@ -38,20 +39,23 @@ class PlanManagerScreen extends StatefulWidget {
 
 class _PlanManagerScreenState extends State<PlanManagerScreen> {
   final List<Plan> _plans = [
-    Plan(name: 'Plan 1'),
-    Plan(name: 'Plan 2'),
-    Plan(name: 'Plan 3'),
+    Plan(name: 'Plan 1', priority: 'High'),
+    Plan(name: 'Plan 2', priority: 'Medium'),
+    Plan(name: 'Plan 3', priority: 'Low'),
   ];
 
-  void _addPlan(String name) {
+  void _addPlan(String name, String priority) {
     setState(() {
-      _plans.add(Plan(name: name));
+      _plans.add(Plan(name: name, priority: priority));
+      _sortPlans();
     });
   }
 
-  void _updatePlan(int index, String newName) {
+  void _updatePlan(int index, String newName, String newPriority) {
     setState(() {
       _plans[index].name = newName;
+      _plans[index].priority = newPriority;
+      _sortPlans();
     });
   }
 
@@ -65,6 +69,71 @@ class _PlanManagerScreenState extends State<PlanManagerScreen> {
     setState(() {
       _plans.removeAt(index);
     });
+  }
+
+  void _sortPlans() {
+    _plans.sort((a, b) {
+      const priorityOrder = {'High': 1, 'Medium': 2, 'Low': 3};
+      return priorityOrder[a.priority]!.compareTo(priorityOrder[b.priority]!);
+    });
+  }
+
+  Future<void> _showPlanDialog({int? index}) async {
+    final TextEditingController nameController = TextEditingController(
+      text: index != null ? _plans[index].name : '',
+    );
+    String selectedPriority = index != null ? _plans[index].priority : 'Medium';
+
+    await showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(index == null ? 'Create New Plan' : 'Update Plan'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameController,
+                decoration: const InputDecoration(hintText: 'Enter plan name'),
+              ),
+              const SizedBox(height: 10),
+              DropdownButtonFormField<String>(
+                value: selectedPriority,
+                items: ['High', 'Medium', 'Low']
+                    .map((priority) => DropdownMenuItem(
+                          value: priority,
+                          child: Text(priority),
+                        ))
+                    .toList(),
+                onChanged: (value) {
+                  selectedPriority = value!;
+                },
+                decoration: const InputDecoration(labelText: 'Select Priority'),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                if (nameController.text.isNotEmpty) {
+                  if (index == null) {
+                    _addPlan(nameController.text, selectedPriority);
+                  } else {
+                    _updatePlan(index, nameController.text, selectedPriority);
+                  }
+                }
+                Navigator.pop(context);
+              },
+              child: Text(index == null ? 'Create' : 'Update'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -83,44 +152,13 @@ class _PlanManagerScreenState extends State<PlanManagerScreen> {
                 final plan = _plans[index];
                 return Dismissible(
                   key: Key(plan.id),
-                  onDismissed: (direction) {
-                    _removePlan(index);
-                  },
+                  onDismissed: (direction) => _removePlan(index),
                   child: GestureDetector(
-                    onLongPress: () async {
-                      String? updatedName = await showDialog<String>(
-                        context: context,
-                        builder: (BuildContext context) {
-                          final controller = TextEditingController(text: plan.name);
-                          return AlertDialog(
-                            title: const Text('Update Plan Name'),
-                            content: TextField(
-                              controller: controller,
-                              decoration: const InputDecoration(hintText: 'Enter new name'),
-                            ),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(context),
-                                child: const Text('Cancel'),
-                              ),
-                              TextButton(
-                                onPressed: () {
-                                  Navigator.pop(context, controller.text);
-                                },
-                                child: const Text('Update'),
-                              ),
-                            ],
-                          );
-                        },
-                      );
-
-                      if (updatedName != null && updatedName.isNotEmpty) {
-                        _updatePlan(index, updatedName);
-                      }
-                    },
+                    onLongPress: () => _showPlanDialog(index: index),
                     onDoubleTap: () => _removePlan(index),
                     child: ListTile(
                       title: Text(plan.name),
+                      subtitle: Text('Priority: ${plan.priority}'),
                       trailing: IconButton(
                         icon: Icon(plan.isCompleted ? Icons.check_box : Icons.check_box_outline_blank),
                         onPressed: () => _togglePlanCompletion(index),
@@ -132,15 +170,13 @@ class _PlanManagerScreenState extends State<PlanManagerScreen> {
               },
             ),
           ),
-          Center(
+          Padding(
+            padding: const EdgeInsets.all(16.0),
             child: ElevatedButton(
-              onPressed: () {
-                _addPlan('New Plan');
-              },
+              onPressed: () => _showPlanDialog(),
               child: const Text('Create Plan'),
             ),
           ),
-          const SizedBox(height: 20),
         ],
       ),
     );
