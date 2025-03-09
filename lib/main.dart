@@ -71,7 +71,6 @@ class _PlanManagerScreenState extends State<PlanManagerScreen> {
     });
   }
 
-
   void _addPlan(String name, String description, String priority, DateTime date) {
     setState(() {
       _plans.add(Plan(name: name, description: description, priority: priority, date: date));
@@ -107,7 +106,7 @@ class _PlanManagerScreenState extends State<PlanManagerScreen> {
       return priorityOrder[a.priority]!.compareTo(priorityOrder[b.priority]!);
     });
   }
-
+  
   Future<void> _showPlanDialog({int? index}) async {
     final TextEditingController nameController = TextEditingController(text: index != null ? _plans[index].name : '');
     final TextEditingController descriptionController = TextEditingController(text: index != null ? _plans[index].description : '');
@@ -268,12 +267,29 @@ class _PlanManagerScreenState extends State<PlanManagerScreen> {
             },
           ),
           SizedBox(height: 50),
-
+          
           Expanded(
             child: ListView.builder(
               itemCount: _plans.length,
               itemBuilder: (context, index) {
                 final plan = _plans[index];
+                Color priorityColor;
+
+                // Set priority text color based on the priority level
+                switch (plan.priority) {
+                  case 'High':
+                    priorityColor = Colors.red;
+                    break;
+                  case 'Medium':
+                    priorityColor = Colors.orange;
+                    break;
+                  case 'Low':
+                    priorityColor = Colors.amber;
+                    break;
+                  default:
+                    priorityColor = Colors.black;
+                }
+
                 return Dismissible(
                   key: Key(plan.id),
                   onDismissed: (direction) => _removePlan(index),
@@ -282,12 +298,24 @@ class _PlanManagerScreenState extends State<PlanManagerScreen> {
                     onDoubleTap: () => _removePlan(index),
                     child: ListTile(
                       title: Text(plan.name),
-                      subtitle: Text('Priority: ${plan.priority} | Date: ${plan.date?.toLocal().toString().split(' ')[0]}'),
+                      subtitle: Row(
+                        children: [
+                          Text(
+                            'Priority: ',
+                            style: TextStyle(color: Colors.black),
+                          ),
+                          Text(
+                            plan.priority,
+                            style: TextStyle(color: priorityColor, fontWeight: FontWeight.bold),
+                          ),
+                          Text(' | Date: ${plan.date?.toLocal().toString().split(' ')[0]}'),
+                        ],
+                      ),
                       trailing: IconButton(
                         icon: Icon(plan.isCompleted ? Icons.check_box : Icons.check_box_outline_blank),
                         onPressed: () => _togglePlanCompletion(index),
                       ),
-                      tileColor: plan.isCompleted ? Colors.green[100] : null,
+                      tileColor: plan.isCompleted ? Colors.green[100] : Colors.blue[100],
                     ),
                   ),
                 );
