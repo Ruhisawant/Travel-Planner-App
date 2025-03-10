@@ -1,5 +1,7 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
+import 'dart:async';
+
 import 'main.dart';
 
 class DatabaseHelper {
@@ -24,7 +26,7 @@ class DatabaseHelper {
   Future _createDB(Database db, int version) async {
     await db.execute('''
     CREATE TABLE plans(
-      _id INTEGER PRIMARY KEY AUTOINCREMENT,
+      _id INTEGER PRIMARY KEY,
       name TEXT,
       description TEXT,
       priority TEXT,
