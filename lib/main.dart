@@ -29,11 +29,11 @@ class Plan {
   String description;
 
   Plan({
-    required this.name,
     this.isCompleted = false,
-    this.date,
-    required this.priority,
+    required this.name,
     required this.description,
+    required this.priority,
+    required this.date,
   });
 }
 
@@ -48,20 +48,41 @@ class PlanManagerScreen extends StatefulWidget {
 
 class _PlanManagerScreenState extends State<PlanManagerScreen> {
   final Map<DateTime, List<Plan>> _scheduledPlans = {};
-  
+  DateTime _selectedDate = DateTime.now();
+
   final List<Plan> _plans = [
-    Plan(name: 'Plan 1', description: 'description', priority: 'High', date: DateTime.now()),
-    Plan(name: 'Plan 2', description: 'description', priority: 'Medium', date: DateTime.now()),
-    Plan(name: 'Plan 3', description: 'description', priority: 'Low', date: DateTime.now()),
+    Plan(
+      name: 'Plan 1',
+      description: 'description',
+      priority: 'High',
+      date: DateTime.now(),
+    ),
+    Plan(
+      name: 'Plan 2',
+      description: 'description',
+      priority: 'Medium',
+      date: DateTime.now(),
+    ),
+    Plan(
+      name: 'Plan 3',
+      description: 'description',
+      priority: 'Low',
+      date: DateTime.now(),
+    ),
   ];
 
-  void _addCalendarPlan(String name, DateTime date, String priority, String description) {
+  void _addCalendarPlan(
+    String name,
+    String description,
+    String priority,
+    DateTime date,
+  ) {
     setState(() {
       final newPlan = Plan(
         name: name,
-        date: date,
-        priority: priority,
         description: description,
+        priority: priority,
+        date: date,
       );
       _plans.add(newPlan);
       if (_scheduledPlans[date] == null) {
@@ -71,14 +92,32 @@ class _PlanManagerScreenState extends State<PlanManagerScreen> {
     });
   }
 
-  void _addPlan(String name, String description, String priority, DateTime date) {
+  void _addPlan(
+    String name,
+    String description,
+    String priority,
+    DateTime date,
+  ) {
     setState(() {
-      _plans.add(Plan(name: name, description: description, priority: priority, date: date));
+      _plans.add(
+        Plan(
+          name: name,
+          description: description,
+          priority: priority,
+          date: date,
+        ),
+      );
       _sortPlans();
     });
   }
 
-  void _updatePlan(int index, String newName, String newDescription, String newPriority, DateTime newDate) {
+  void _updatePlan(
+    int index,
+    String newName,
+    String newDescription,
+    String newPriority,
+    DateTime newDate,
+  ) {
     setState(() {
       _plans[index].name = newName;
       _plans[index].description = newDescription;
@@ -106,12 +145,17 @@ class _PlanManagerScreenState extends State<PlanManagerScreen> {
       return priorityOrder[a.priority]!.compareTo(priorityOrder[b.priority]!);
     });
   }
-  
+
   Future<void> _showPlanDialog({int? index}) async {
-    final TextEditingController nameController = TextEditingController(text: index != null ? _plans[index].name : '');
-    final TextEditingController descriptionController = TextEditingController(text: index != null ? _plans[index].description : '');
+    final TextEditingController nameController = TextEditingController(
+      text: index != null ? _plans[index].name : '',
+    );
+    final TextEditingController descriptionController = TextEditingController(
+      text: index != null ? _plans[index].description : '',
+    );
     String selectedPriority = index != null ? _plans[index].priority : 'Medium';
-    DateTime selectedDate = index != null ? _plans[index].date ?? DateTime.now() : DateTime.now();
+    DateTime selectedDate =
+        index != null ? _plans[index].date ?? DateTime.now() : DateTime.now();
 
     await showDialog(
       context: context,
@@ -131,7 +175,9 @@ class _PlanManagerScreenState extends State<PlanManagerScreen> {
               // Plan Description
               TextField(
                 controller: descriptionController,
-                decoration: const InputDecoration(hintText: 'Enter plan description'),
+                decoration: const InputDecoration(
+                  hintText: 'Enter plan description',
+                ),
               ),
 
               const SizedBox(height: 10),
@@ -157,12 +203,15 @@ class _PlanManagerScreenState extends State<PlanManagerScreen> {
               // Priority Dropdown
               DropdownButtonFormField<String>(
                 value: selectedPriority,
-                items: ['High', 'Medium', 'Low']
-                    .map((priority) => DropdownMenuItem(
-                      value: priority,
-                      child: Text(priority),
-                    ))
-                    .toList(),
+                items:
+                    ['High', 'Medium', 'Low']
+                        .map(
+                          (priority) => DropdownMenuItem(
+                            value: priority,
+                            child: Text(priority),
+                          ),
+                        )
+                        .toList(),
                 onChanged: (value) {
                   selectedPriority = value!;
                 },
@@ -177,11 +226,23 @@ class _PlanManagerScreenState extends State<PlanManagerScreen> {
             ),
             TextButton(
               onPressed: () {
-                if (nameController.text.isNotEmpty && descriptionController.text.isNotEmpty) {
+                if (nameController.text.isNotEmpty &&
+                    descriptionController.text.isNotEmpty) {
                   if (index == null) {
-                    _addPlan(nameController.text, descriptionController.text, selectedPriority, selectedDate);
+                    _addPlan(
+                      nameController.text,
+                      descriptionController.text,
+                      selectedPriority,
+                      selectedDate,
+                    );
                   } else {
-                    _updatePlan(index, nameController.text, descriptionController.text, selectedPriority, selectedDate);
+                    _updatePlan(
+                      index,
+                      nameController.text,
+                      descriptionController.text,
+                      selectedPriority,
+                      selectedDate,
+                    );
                   }
                 }
                 Navigator.pop(context);
@@ -203,6 +264,7 @@ class _PlanManagerScreenState extends State<PlanManagerScreen> {
       ),
       body: Column(
         children: [
+          // Calendar Widget
           TableCalendar(
             focusedDay: DateTime.now(),
             firstDay: DateTime(2020),
@@ -211,65 +273,44 @@ class _PlanManagerScreenState extends State<PlanManagerScreen> {
               return isSameDay(day, DateTime.now());
             },
             onDaySelected: (selectedDay, focusedDay) {
-              final DateTime dateWithoutTime = DateTime(selectedDay.year, selectedDay.month, selectedDay.day);
-              showDialog<String>(
-                context: context,
-                builder: (BuildContext context) {
-                  TextEditingController planController = TextEditingController();
-                  String selectedPriority = 'Medium';
-                  String selectedDescription = '';
-
-                  return AlertDialog(
-                    title: const Text('Create Plan'),
-                    content: Column(
-                      children: [
-                        TextField(
-                          controller: planController,
-                          decoration: const InputDecoration(hintText: 'Enter Plan Name'),
-                        ),
-                        TextField(
-                          controller: TextEditingController(text: selectedDescription),
-                          decoration: const InputDecoration(hintText: 'Enter Plan Description'),
-                        ),
-                        DropdownButton<String>(
-                          value: selectedPriority,
-                          items: <String>['Low', 'Medium', 'High']
-                              .map<DropdownMenuItem<String>>((String value) {
-                            return DropdownMenuItem<String>(
-                              value: value,
-                              child: Text(value),
-                            );
-                          }).toList(),
-                          onChanged: (String? newValue) {
-                            setState(() {
-                              selectedPriority = newValue!;
-                            });
-                          },
-                        ),
-                      ],
-                    ),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(context),
-                        child: const Text('Cancel'),
-                      ),
-                      TextButton(
-                        onPressed: () {
-                          if (planController.text.isNotEmpty) {
-                            _addCalendarPlan(planController.text, dateWithoutTime, selectedPriority, selectedDescription);
-                          }
-                          Navigator.pop(context);
-                        },
-                        child: const Text('Create'),
-                      ),
-                    ],
-                  );
-                },
-              );
+              setState(() {
+                _selectedDate = DateTime(
+                  selectedDay.year,
+                  selectedDay.month,
+                  selectedDay.day,
+                ); // Reset time to 00:00:00
+              });
             },
+            calendarBuilders: CalendarBuilders(
+              defaultBuilder: (context, date, events) {
+                return DragTarget<Plan>(
+                  onAcceptWithDetails: (details) {
+                    setState(() {
+                      Plan receivedPlan = details.data;
+                      receivedPlan.date = date; // Correctly updating the date
+                      
+                      _scheduledPlans[date] ??= [];
+                      _scheduledPlans[date]!.add(receivedPlan);
+                    });
+                  },
+                  builder: (context, candidateData, rejectedData) {
+                    return Container(
+                      margin: const EdgeInsets.all(4),
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(8),
+                        color: candidateData.isNotEmpty ? Colors.blue.shade100 : null,
+                      ),
+                      child: Text('${date.day}'),
+                    );
+                  },
+                );
+              },
+            ),
           ),
-
-          SizedBox(height: 50),
+          const SizedBox(height: 50),
+          
+          // ListView for plans
           Expanded(
             child: ListView.builder(
               itemCount: _plans.length,
@@ -298,33 +339,68 @@ class _PlanManagerScreenState extends State<PlanManagerScreen> {
                   child: GestureDetector(
                     onLongPress: () => _showPlanDialog(index: index),
                     onDoubleTap: () => _removePlan(index),
-                    child: ListTile(
-                      title: Text(plan.name),
-                      subtitle: Row(
-                        children: [
-                          Text(
-                            'Priority: ',
-                            style: TextStyle(color: Colors.black),
-                          ),
-                          Text(
-                            plan.priority,
-                            style: TextStyle(color: priorityColor, fontWeight: FontWeight.bold),
-                          ),
-                          Text(' | Date: ${plan.date?.toLocal().toString().split(' ')[0]}'),
-                        ],
+                    child: Draggable<Plan>(
+                      data: plan,
+                      feedback: Material(
+                        child: Container(), // Empty container to avoid visual disruption
                       ),
-                      trailing: IconButton(
-                        icon: Icon(plan.isCompleted ? Icons.check_box : Icons.check_box_outline_blank),
-                        onPressed: () => _togglePlanCompletion(index),
+                      childWhenDragging: Container(),
+                      child: DragTarget<Plan>(
+                        onAcceptWithDetails: (details) {
+                          setState(() {
+                            Plan receivedPlan = details.data;
+                            receivedPlan.date = _selectedDate; // ✅ Use _selectedDate instead
+                            _scheduledPlans[_selectedDate] ??= [];
+                            _scheduledPlans[_selectedDate]!.add(receivedPlan);
+                          });
+                        },
+                        builder: (context, candidateData, rejectedData) {
+                          return Container(
+                            margin: const EdgeInsets.all(8.0),
+                            padding: const EdgeInsets.all(10),
+                            child: ListTile(
+                              title: Text(plan.name),
+                              subtitle: Row(
+                                children: [
+                                  Text(
+                                    'Priority: ',
+                                    style: TextStyle(color: Colors.black),
+                                  ),
+                                  Text(
+                                    plan.priority,
+                                    style: TextStyle(
+                                      color: priorityColor,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  Text(
+                                    ' | Date: ${plan.date?.toLocal().toString().split(' ')[0]}',
+                                  ),
+                                ],
+                              ),
+                              trailing: IconButton(
+                                icon: Icon(
+                                  plan.isCompleted
+                                      ? Icons.check_box
+                                      : Icons.check_box_outline_blank,
+                                ),
+                                onPressed: () => _togglePlanCompletion(index),
+                              ),
+                              tileColor: plan.isCompleted
+                                  ? Colors.green[100]
+                                  : Colors.blue[100],
+                            ),
+                          );
+                        },
                       ),
-                      tileColor: plan.isCompleted ? Colors.green[100] : Colors.blue[100],
                     ),
                   ),
                 );
               },
             ),
           ),
-
+          
+          // Create Plan Button
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: ElevatedButton(
